@@ -1,0 +1,346 @@
+================================================================================
+LAB 1: LINEAR REGRESSION
+================================================================================
+
+ALGORITHM:
+1. Load dataset (X: features, Y: target)
+2. Split data into train/test (80/20)
+3. Create Linear Regression model
+4. Fit model on training data: model.fit(X_train, Y_train)
+5. Predict on test data: Y_pred = model.predict(X_test)
+6. Evaluate: MSE, R² score
+7. Visualize: scatter plot + regression line
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ INPUT: Dataset with features X, Y    │
+│ SPLIT: X_train, X_test, Y_train, Y_test │
+│ MODEL ← LinearRegression()          │
+│ MODEL.fit(X_train, Y_train)         │
+│ Y_pred ← MODEL.predict(X_test)      │
+│ MSE ← mean_squared_error(Y_test, Y_pred) │
+│ R2 ← r2_score(Y_test, Y_pred)      │
+│ PLOT: scatter(X, Y), plot(X, predictions) │
+└──────────────────────────────────────┘
+
+
+================================================================================
+LAB 1 BONUS: LOGISTIC REGRESSION (CLASSIFICATION)
+================================================================================
+
+ALGORITHM:
+1. Load Iris dataset
+2. Split into train/test
+3. Create Logistic Regression model
+4. Fit model on training data
+5. Predict on test data
+6. Calculate accuracy
+7. Plot confusion matrix
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ INPUT: Iris dataset (X, y)          │
+│ SPLIT: X_train, X_test, y_train, y_test │
+│ MODEL ← LogisticRegression()        │
+│ MODEL.fit(X_train, y_train)         │
+│ y_pred ← MODEL.predict(X_test)      │
+│ ACC ← accuracy_score(y_test, y_pred) │
+│ CM ← confusion_matrix(y_test, y_pred) │
+│ PLOT: heatmap(CM)                   │
+└──────────────────────────────────────┘
+
+
+================================================================================
+LAB 2: K-MEANS CLUSTERING
+================================================================================
+
+ALGORITHM:
+1. Load dataset
+2. Initialize k clusters
+3. Repeat until convergence:
+   a. Assign points to nearest centroid
+   b. Update centroids (mean of assigned points)
+4. Calculate silhouette score
+5. Visualize clusters
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ INPUT: Data X, k (number of clusters) │
+│ INITIALIZE: k random centroids      │
+│ REPEAT:                              │
+│   FOR each point in X:               │
+│     Assign to nearest centroid       │
+│   FOR each cluster:                  │
+│     Update centroid = mean(points)   │
+│ UNTIL centroids don't change         │
+│ SCORE ← silhouette_score(X, labels) │
+│ PLOT: scatter(X, colored by cluster) │
+└──────────────────────────────────────┘
+
+
+================================================================================
+LAB 2 PART 2: PCA (PRINCIPAL COMPONENT ANALYSIS)
+================================================================================
+
+ALGORITHM:
+1. Standardize data: X_scaled
+2. Compute covariance matrix
+3. Calculate eigenvectors & eigenvalues
+4. Sort by eigenvalues (descending)
+5. Select top n components
+6. Transform data: X_pca = X_scaled · eigenvectors
+7. Calculate explained variance
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ INPUT: Data X, n_components          │
+│ X_scaled ← standardize(X)            │
+│ COV ← covariance_matrix(X_scaled)    │
+│ eigenvalues, eigenvectors ← eig(COV) │
+│ SORT eigenvectors by eigenvalues     │
+│ SELECT top n eigenvectors            │
+│ X_pca ← X_scaled · eigenvectors      │
+│ variance ← sum(top n eigenvalues)    │
+│ PLOT: scatter(PC1, PC2)              │
+└──────────────────────────────────────┘
+
+
+================================================================================
+LAB 3: ARTIFICIAL NEURAL NETWORK (FROM SCRATCH)
+================================================================================
+
+ALGORITHM:
+1. Initialize weights (W1, b1, W2, b2) randomly
+2. FOR each epoch:
+   a. Forward Propagation:
+      - Z1 = X·W1 + b1
+      - A1 = ReLU(Z1)
+      - Z2 = A1·W2 + b2
+      - A2 = Softmax(Z2)
+   b. Compute Loss: Cross-Entropy
+   c. Backward Propagation:
+      - Calculate gradients (dW2, db2, dW1, db1)
+   d. Update Weights:
+      - W1 -= learning_rate × dW1
+      - b1 -= learning_rate × db1
+      - W2 -= learning_rate × dW2
+      - b2 -= learning_rate × db2
+3. Predict and evaluate accuracy
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ INPUT: X, Y, learning_rate, epochs   │
+│ W1, b1, W2, b2 ← random_init()       │
+│ FOR epoch in 1 to epochs:            │
+│   // Forward Pass                    │
+│   Z1 ← X · W1 + b1                   │
+│   A1 ← ReLU(Z1)                      │
+│   Z2 ← A1 · W2 + b2                  │
+│   A2 ← Softmax(Z2)                   │
+│   Loss ← -sum(Y × log(A2)) / m       │
+│   // Backward Pass                   │
+│   dZ2 ← A2 - Y                       │
+│   dW2 ← A1ᵀ · dZ2 / m                │
+│   db2 ← sum(dZ2) / m                 │
+│   dA1 ← dZ2 · W2ᵀ                    │
+│   dZ1 ← ReLU_grad(dA1, Z1)           │
+│   dW1 ← Xᵀ · dZ1 / m                 │
+│   db1 ← sum(dZ1) / m                 │
+│   // Update                          │
+│   W1 -= lr × dW1; b1 -= lr × db1    │
+│   W2 -= lr × dW2; b2 -= lr × db2    │
+│ RETURN model                         │
+└──────────────────────────────────────┘
+
+ACTIVATION FUNCTIONS:
+- ReLU(x) = max(0, x)
+- Softmax(z)ᵢ = exp(zᵢ) / Σexp(zⱼ)
+- ReLU_grad(x) = 1 if x>0 else 0
+
+
+================================================================================
+LAB 4: ACTIVATION FUNCTIONS
+================================================================================
+
+SIGMOID:
+f(x) = 1 / (1 + e⁻ˣ)
+f'(x) = f(x) × (1 - f(x))
+Range: (0, 1)
+Use: Binary classification
+
+TANH:
+f(x) = (eˣ - e⁻ˣ) / (eˣ + e⁻ˣ)
+f'(x) = 1 - f(x)²
+Range: (-1, 1)
+Use: Hidden layers (zero-centered)
+
+RELU:
+f(x) = max(0, x)
+f'(x) = 1 if x>0, else 0
+Range: [0, ∞)
+Use: Hidden layers (fast, no vanishing gradient)
+
+COMPARISON:
+┌──────────┬────────────┬───────────┬─────────────┐
+│ Function │ Range      │ Gradient  │ Speed       │
+├──────────┼────────────┼───────────┼─────────────┤
+│ Sigmoid  │ (0,1)      │ Vanishing │ Slow        │
+│ Tanh     │ (-1,1)     │ Vanishing │ Moderate    │
+│ ReLU     │ [0,∞)      │ Good      │ Fast        │
+└──────────┴────────────┴───────────┴─────────────┘
+
+
+================================================================================
+LAB 5 & 6: VACUUM CLEANER AGENT (PROBLEM SOLVING & RATIONAL AGENT)
+================================================================================
+
+ALGORITHM:
+1. Initialize Environment (2×2 grid, random dirty/clean)
+2. Place agent at random location
+3. FOR each step:
+   a. Perceive current location status
+   b. IF location is Dirty:
+      - Clean it (score +10)
+   c. ELSE:
+      - Move to another room (score -1)
+   d. Regenerate dirt randomly
+4. Log performance and plot
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ ENVIRONMENT:                         │
+│   rooms ← {A, B, C, D}               │
+│   status ← random(Clean/Dirty)       │
+│   agent_location ← random(rooms)     │
+│   score ← 0                          │
+│                                      │
+│ AGENT:                               │
+│   WHILE steps > 0:                   │
+│     loc ← current_location           │
+│     IF rooms[loc] == Dirty:          │
+│       rooms[loc] ← Clean             │
+│       score += 10                    │
+│     ELSE:                            │
+│       loc ← move_to_random_room()    │
+│       score -= 1                     │
+│     regenerate_dirt(probability)     │
+│     log_performance(score)           │
+│   PLOT performance_over_time         │
+└──────────────────────────────────────┘
+
+PERFORMANCE MEASURE:
+- Clean room: +10 points
+- Move: -1 point
+- Goal: Maximize score
+
+
+================================================================================
+LAB 7: GENETIC ALGORITHM
+================================================================================
+
+ALGORITHM:
+1. Initialize population randomly
+2. FOR each generation:
+   a. Evaluate fitness of each individual
+   b. Selection: Choose parents (roulette wheel)
+   c. Crossover: Breed new children
+   d. Mutation: Random changes to children
+   e. Replace old population
+   f. Keep best individual (elitism)
+3. Return best solution
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ INPUT: pop_size, generations, bounds │
+│ population ← random_init(pop_size)   │
+│ FOR gen in 1 to generations:         │
+│   fitness ← evaluate(population)     │
+│   best ← individual with max fitness │
+│   new_population ← []                │
+│   WHILE size(new_population) < pop_size: │
+│     parent1, parent2 ← select(fitness) │
+│     child1, child2 ← crossover(parents) │
+│     child1 ← mutate(child1)          │
+│     child2 ← mutate(child2)          │
+│     ADD children to new_population   │
+│   population ← new_population        │
+│ RETURN best individual               │
+└──────────────────────────────────────┘
+
+KEY OPERATIONS:
+- Fitness: f = 1 / (1 + objective_value)
+- Selection: Probability ∝ fitness
+- Crossover: child = α×parent1 + (1-α)×parent2
+- Mutation: child += random_noise
+
+
+================================================================================
+LAB 8: LINEAR PROGRAMMING (CONSTRAINT OPTIMIZATION)
+================================================================================
+
+ALGORITHM:
+1. Define objective function: Maximize Z = c₁x₁ + c₂x₂
+2. Define constraints:
+   - a₁x₁ + a₂x₂ ≤ b₁
+   - a₃x₁ + a₄x₂ ≤ b₂
+   - x₁, x₂ ≥ 0
+3. Solve using Simplex method
+4. Find optimal point (x₁*, x₂*)
+5. Calculate maximum profit
+
+PSEUDOCODE:
+┌──────────────────────────────────────┐
+│ OBJECTIVE: Maximize Z = 30x₁ + 20x₂ │
+│ CONSTRAINTS:                         │
+│   2x₁ + 3x₂ ≤ 100  (Labor)          │
+│   3x₁ + 2x₂ ≤ 90   (Material)       │
+│   x₁, x₂ ≥ 0                        │
+│                                      │
+│ ALGORITHM:                           │
+│ c ← [-30, -20]  // Negative for max │
+│ A ← [[2,3], [3,2]]                  │
+│ b ← [100, 90]                       │
+│ result ← linprog(c, A, b, bounds)   │
+│ x₁*, x₂* ← result.x                 │
+│ Z_max ← -result.fun                 │
+│ PLOT feasible_region(constraints)   │
+└──────────────────────────────────────┘
+
+SIMPLEX METHOD STEPS:
+1. Convert to standard form
+2. Find initial basic feasible solution
+3. Check optimality (all coefficients ≤ 0)
+4. IF not optimal:
+   - Select entering variable (most negative)
+   - Select leaving variable (min ratio test)
+   - Pivot and update tableau
+5. Repeat until optimal
+
+
+================================================================================
+QUICK REFERENCE - COMPLEXITY & FORMULAS
+================================================================================
+
+TIME COMPLEXITY:
+- Linear Regression:    O(n×p² + p³)    n=samples, p=features
+- K-Means:             O(n×k×i×d)      k=clusters, i=iterations, d=dimensions
+- PCA:                 O(min(n²×p, p²×n))
+- ANN:                 O(e×n×(h₁+h₂))  e=epochs, h=hidden units
+- Genetic Algorithm:   O(g×p×f)        g=generations, p=pop_size, f=fitness eval
+
+KEY FORMULAS:
+- MSE = Σ(yᵢ - ŷᵢ)² / n
+- R² = 1 - (SS_res / SS_tot)
+- Cross-Entropy Loss = -Σ(y×log(ŷ))
+- Silhouette Score = (b-a) / max(a,b)
+- Explained Variance = λᵢ / Σλⱼ
+
+GRADIENT DESCENT:
+θ := θ - α × ∇J(θ)
+where α = learning rate, ∇J = gradient
+
+BACKPROPAGATION:
+∂L/∂w = ∂L/∂a × ∂a/∂z × ∂z/∂w
+Chain rule applied layer by layer
+
+================================================================================
