@@ -1,0 +1,186 @@
+GAI Pseudo codes
+Lab 1 - text gen with pre trained model - Algorithm/Pseudocode
+
+Set model name as GPT-2 and select DEVICE (GPU or CPU).
+Load tokenizer and GPT-2 model using Hugging Face.
+Assign a pad token if missing.
+Move model to selected device and set it to evaluation mode.
+Define the generate() function:
+
+Set random seed.
+Tokenize input prompt.
+
+Generate text using sampling parameters (temperature, top-k, top-p).
+Decode output tokens into text.
+In the main block, load model and tokenizer.
+Provide an input prompt and generate multiple text sequences.
+Print all generated outputs.
+
+Load a text classification pipeline (e.g., multilingual-sentiment-analysis).
+Define an input sentence.
+Pass the sentence to the pipeline and print the result.
+
+Lab 2 - Build a Variational Autoencoder (VAE) using PyTorch or TensorFlow for MNIST image reconstruction - Algorithm/Pseudocode
+
+Load MNIST dataset and create DataLoaders for training/testing.
+Define encoder layers:
+Flatten input image.
+
+Fully connected layer → ReLU.
+Output μ and logvar .
+Apply reparameterization trick to obtain latent vector z.
+Define decoder layers:
+Fully connected layers → ReLU → Sigmoid to generate reconstructed image.
+Compute losses:
+Binary Cross Entropy (BCE) for reconstruction.
+KL Divergence for latent distribution regularization.
+Backpropagate total VAE loss (BCE + KLD) and update parameters using Adam optimizer.
+Repeat training for given epochs.
+Pass test images through the VAE to display original and reconstructed images.
+
+Lab 3 - Train and Evaluate a GAN and visualize sample generations - Algorithm/Pseudocode
+
+1.  Load Dataset
+    Download Fashion MNIST images
+    Normalize to range (-1, 1)
+    Prepare batches using DataLoader
+
+2.  Define the Generator
+    Input: 100-dimensional random noise (latent vector)
+    Fully connected layers with ReLU
+    Output layer with Tanh → 784 (28×28) pixel values
+
+3.  Define the Discriminator
+    Input: flattened 784-dimensional image
+    Fully connected layers with LeakyReLU
+    Final output: single probability via Sigmoid
+
+4.  Train the GAN
+For each epoch:
+    Train Discriminator
+    Get batch of real images
+    Generate fake images from noise
+    Compute loss on real images
+    Compute loss on fake images
+    Backpropagate discriminator loss
+
+    Train Generator
+    Generate fake images
+    Pass through discriminator
+    Compute generator loss (tries to make D output “real”)
+    Backpropagate generator loss
+
+    Print losses
+    Generate and display sample fake images
+
+Lab 4 - Generate Images using Stable Diffusion API or Local Setup, apply prompt tuning. - Algorithm/Pseudocode
+
+1.  Install Dependencies
+Install PyTorch, Diffusers, Transformers, and Safe tensors.
+
+2.  Import Libraries
+Load PyTorch and Stable Diffusion Pipeline from Diffusers.
+
+3.  Load Stable Diffusion Model
+    Choose runwayml/stable-diffusion-v1-5
+    Load the model in half precision (float16)
+    Move model to GPU for fast generation
+    Enable attention slicing (memory optimization)
+
+4.  Prepare Prompts
+    Define a positive prompt (desired features)
+
+5.  Generate Image
+    Call pipe (prompt)
+    Extract the generated image
+6.  Display Image
+    Show image using .images[0]
+
+Lab 5 - Explore different types of Prompt Engineering. - Algorithm/Pseudocode
+
+1.  Install and import transformers, sentencepiece, and accelerate.
+2.  Load a local instruction-tuned model (e.g., google/flan-t5-base) using the text2text-generation pipeline.
+3.  Define a function ask(prompt) to generate text from the model.
+4.  Create a dictionary of prompts demonstrating different techniques:
+    Zero-Shot
+    Few-Shot
+    Chain-of-Thought
+    Role Prompting
+    Style Prompting
+    Constraints
+5.  Loop through the dictionary items.
+6.  For each prompt type, print the name and the model's response using the ask() function.
+
+Lab 6 - Fine-tune a small-scale LLM using LoRA on a custom text dataset. - Algorithm/Pseudocode
+
+1.  Install necessary libraries: transformers, datasets, peft, accelerate.
+2.  Load GPT-2 model and tokenizer.
+
+3.  Set pad_token = eos_token.
+
+4.  Define a custom list of text strings (e.g., about "Zog").
+5.  Create a HuggingFace Dataset from this dictionary.
+5.  Tokenize each line with fixed max_length.
+6.  Define LoRA configuration:
+
+    rank r
+    lora_alpha
+    dropout
+7.  Wrap GPT-2 using get_peft_model().
+8.  Define training arguments (batch size, LR, epochs).
+9.  Train using HuggingFace Trainer.
+10. Save the fine-tuned model.
+11. Generate text to validate training
+
+Lab 7 - Evaluate Model Performance using FID, IS, and PRD metrics and compare across models - Algorithm/Pseudocode
+
+Input:
+Real features, Fake features from Model A & B
+Output:
+FID, IS, Precision, Recall + Best Model comparison
+
+Steps:
+1.  Generate real and fake feature vectors
+
+    real ← N(0,1)
+    fake_A ← N(0.2,1)
+    fake_B ← N(-0.2,1)
+
+2.  Compute FID
+    Calculate mean and covariance of real & fake
+    Use FID formula (simplified)
+    Lower = better
+
+3.  Compute IS
+    Convert features to softmax-like probabilities
+    Compute KL divergence
+    Apply exponential to get IS
+    Higher = better
+
+4.  Compute PRD
+    Precision = closeness of fake to real mean
+    Recall = closeness of real to fake mean
+    Higher = better
+
+5.  Compute metrics for Model A and B
+6.  Compare models
+    FID (lower better)
+    IS (higher better)
+    Precision (higher better)
+    Recall (higher better)
+
+7.  Print best model for each metric
+
+
+Lab 8 - Deploy a Generative Model as API using Gradio/Streamlit + Hugging Face - Algorithm/Pseudocode
+
+1.  Install and import Gradio and Hugging Face Transformers.
+2.  Load a pre-trained GPT-2 model using the pipeline("text-generation").
+3.  Define a function generate_text(prompt) to process user input and generate text.
+
+4.  Create a Gradio interface with:
+5.  Function = generate_text
+    Input widget = Textbox
+    Output = Text
+    Title + description
+The user interacts with the app by entering prompts and receiving generated text.

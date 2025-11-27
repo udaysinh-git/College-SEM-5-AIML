@@ -1,0 +1,457 @@
+
+GAI PRACTICALS
+Lab 1 - text gen with pre trained model
+
+from transformers import GPT2Tokenizer, GPT2Model
+tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+model = GPT2Model.from_pretrained('gpt2')
+text = "Replace me by any text you'd like."
+encoded_input = tokenizer(text, return_tensors='pt')
+output = model(**encoded_input)
+
+
+from transformers import pipeline, set_seed
+generator = pipeline('text-generation', model='gpt2')
+set_seed(42)
+generator("Hello, I'm a language model,", max_length=30, num_return_sequences=3)
+
+
+from transformers import GPT2Tokenizer, GPT2Model
+tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+model = GPT2Model.from_pretrained('gpt2')
+text = "Replace me by any text you'd like."
+encoded_input = tokenizer(text, return_tensors='pt')
+output = model(**encoded_input)
+
+from transformers import pipeline
+pipe = pipeline("text-classification", model="tabularisai/multilingual-sentiment-analysis")
+sentence = "I despise this product! It is horribly designed and looks hideous."
+result = pipe(sentence)
+print(result)
+
+
+====================================================================================================
+Lab 2 - Build a Variational Autoencoder (VAE) using PyTorch or TensorFlow for MNIST image reconstruction
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import matplotlib.pyplot as plt
+
+# -------- LOAD & PREPARE MNIST --------
+(x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
+x_train = x_train.astype("float32") / 255.0
+x_test  = x_test.astype("float32") / 255.0
+
+x_train = x_train.reshape((-1, 28 * 28))
+x_test  = x_test.reshape((-1, 28 * 28))
+
+latent_dim = 64
+
+# -------- ENCODER --------
+inputs = keras.Input(shape=(28 * 28,))
+x = layers.Dense(512, activation="relu")(inputs)
+x = layers.Dense(256, activation="relu")(x)
+z_mean = layers.Dense(latent_dim, name="z_mean")(x)
+z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
+
+def sampling(args):
+    z_m, z_lv = args
+    eps = tf.random.normal(shape=tf.shape(z_m))
+    return z_m + tf.exp(0.5 * z_lv) * eps
+
+z = layers.Lambda(sampling, name="z")([z_mean, z_log_var])
+encoder = keras.Model(inputs, [z_mean, z_log_var, z], name="encoder")
+
+# -------- DECODER --------
+latent_inputs = keras.Input(shape=(latent_dim,))
+x = layers.Dense(256, activation="relu")(latent_inputs)
+x = layers.Dense(512, activation="relu")(x)
+outputs = layers.Dense(28 * 28, activation="sigmoid")(x)
+decoder = keras.Model(latent_inputs, outputs, name="decoder")
+
+# -------- VAE MODEL --------
+class VAE(keras.Model):
+    def __init__(self, encoder, decoder, **kwargs):
+        super().__init__(**kwargs)
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def call(self, x):
+        z_mean, z_log_var, z = self.encoder(x)
+        recon = self.decoder(z)
+
+        # recon_loss: scalar
+        recon_loss = keras.losses.binary_crossentropy(x, recon)
+        recon_loss = tf.reduce_mean(recon_loss)
+
+        # KL loss: scalar
+        kl_loss = -0.5 * tf.reduce_mean(
+            1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var)
+        )
+
+        self.add_loss(recon_loss + kl_loss)
+        return recon
+
+vae = VAE(encoder, decoder)
+vae.compile(optimizer="adam")
+vae.fit(x_train, x_train, epochs=10, batch_size=128, validation_data=(x_test, x_test))
+
+# -------- RECONSTRUCTION VISUALIZATION --------
+decoded = vae.predict(x_test[:10])
+
+plt.figure(figsize=(20, 4))
+for i in range(10):
+    # original
+    ax = plt.subplot(2, 10, i + 1)
+    plt.imshow(x_test[i].reshape(28, 28), cmap="gray")
+    plt.axis("off")
+    # reconstructed
+    ax = plt.subplot(2, 10, 10 + i + 1)
+    plt.imshow(decoded[i].reshape(28, 28), cmap="gray")
+    plt.axis("off")
+plt.show()
+
+
+====================================================================================================
+Lab 3 - Train and Evaluate a GAN and visualize sample generations
+
+# pip install torch torchvision matplotlib
+
+import torch, torch.nn as nn, torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
+
+# Dataset
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
+train_ds = datasets.FashionMNIST(root="./data", train=True, download=True, transform=transform)
+loader = DataLoader(train_ds, batch_size=64, shuffle=True)
+
+# Generator
+class Generator(nn.Module):
+    def __init__(self, z_dim=100):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(z_dim, 256), nn.ReLU(True),
+            nn.Linear(256, 512),   nn.ReLU(True),
+            nn.Linear(512, 784),   nn.Tanh()
+        )
+    def forward(self, z):
+        return self.net(z).view(-1, 1, 28, 28)
+
+# Discriminator
+class Discriminator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(784, 512), nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(512, 256), nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(256, 1),   nn.Sigmoid()
+        )
+    def forward(self, x):
+        return self.net(x.view(x.size(0), -1))
+
+G, D = Generator().to(device), Discriminator().to(device)
+loss_fn = nn.BCELoss()
+opt_G = optim.Adam(G.parameters(), lr=2e-4)
+opt_D = optim.Adam(D.parameters(), lr=2e-4)
+
+fixed_noise = torch.randn(16, 100, device=device)
+epochs = 5
+
+for epoch in range(epochs):
+    for real, _ in loader:
+        real = real.to(device)
+        bsz = real.size(0)
+        real_lbl = torch.ones(bsz, 1, device=device)
+        fake_lbl = torch.zeros(bsz, 1, device=device)
+
+        # Train D
+        z = torch.randn(bsz, 100, device=device)
+        fake = G(z).detach()
+        D_real = D(real)
+        D_fake = D(fake)
+        D_loss = (loss_fn(D_real, real_lbl) + loss_fn(D_fake, fake_lbl)) / 2
+
+        opt_D.zero_grad()
+        D_loss.backward()
+        opt_D.step()
+
+        # Train G
+        z = torch.randn(bsz, 100, device=device)
+        fake = G(z)
+        D_fake_for_G = D(fake)
+        G_loss = loss_fn(D_fake_for_G, real_lbl)
+
+        opt_G.zero_grad()
+        G_loss.backward()
+        opt_G.step()
+
+    print(f"Epoch {epoch+1}/{epochs}  D_loss: {D_loss.item():.4f}  G_loss: {G_loss.item():.4f}")
+
+    with torch.no_grad():
+        samples = G(fixed_noise).cpu()
+    samples = samples * 0.5 + 0.5  # denorm to [0,1]
+
+    fig, axs = plt.subplots(2, 8, figsize=(10, 3))
+    axs = axs.flatten()
+    for i in range(16):
+        axs[i].imshow(samples[i].squeeze(), cmap="gray")
+        axs[i].axis("off")
+    plt.suptitle(f"Epoch {epoch+1}")
+    plt.show()
+
+
+====================================================================================================
+Lab 4 - Generate Images using Stable Diffusion API or Local Setup, apply prompt tuning.	
+
+!pip -q install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+!pip -q install -U diffusers transformers accelerate safetensors
+
+from diffusers import DiffusionPipeline
+import torch
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+pipe = DiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5",
+                                         torch_dtype=torch.float16 if device=="cuda" else torch.float32)
+pipe = pipe.to(device)
+
+prompt = "a futuristic mountain city, sunrise, ultra detailed, cinematic lighting"
+image = pipe(prompt).images[0]
+image.save("output.png")
+print("Saved → output.png")
+
+
+
+====================================================================================================
+Lab 5 - Explore different types of Prompt Engineering.
+
+!pip install -q transformers sentencepiece accelerate
+
+from transformers import pipeline
+
+# Local / free instruction-tuned model
+generator = pipeline("text2text-generation", model="google/flan-t5-base")
+
+def ask(prompt):
+    out = generator(prompt, max_new_tokens=80)[0]["generated_text"]
+    return out
+
+prompts = {
+    "Zero-Shot": "Translate 'How are you?' to French.",
+    "Few-Shot": (
+        "English: Hello -> French: Bonjour\n"
+        "English: Good morning -> French: Bonjour\n"
+        "English: Thank you -> French:"
+    ),
+    "Chain-of-Thought": (
+        "A farmer has 12 apples, gives 5 away, eats 2. "
+        "How many are left? Explain step by step."
+    ),
+    "Role Prompting": "You are a math tutor. Explain Pythagoras' theorem simply.",
+    "Style Prompting": "Explain Artificial Intelligence in the style of Shakespeare.",
+    "Constraints": "Summarize Machine Learning in exactly 3 short bullet points."
+}
+
+for name, prompt in prompts.items():
+    print(f"\n=== {name} ===")
+    print(ask(prompt))
+
+
+====================================================================================================
+Lab 6 - Fine-tune a small-scale LLM using LoRA on a custom text dataset.
+!pip install -q transformers datasets peft accelerate torch
+
+import torch
+from datasets import Dataset
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    TrainingArguments,
+    Trainer,
+    DataCollatorForLanguageModeling,
+)
+from peft import LoraConfig, get_peft_model
+
+# -----------------------------
+# 0. Device
+# -----------------------------
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using device:", device)
+
+# -----------------------------
+# 1. Small custom dataset
+# -----------------------------
+data = [
+    "Zog has purple skies and three moons.",
+    "People of Zog communicate by melodic whistles.",
+    "Zog uses crystallized stardust as currency.",
+] * 20
+
+dataset = Dataset.from_dict({"text": data})
+
+# -----------------------------
+# 2. Load model + tokenizer
+# -----------------------------
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer.pad_token = tokenizer.eos_token
+
+model = AutoModelForCausalLM.from_pretrained(model_name)
+model.resize_token_embeddings(len(tokenizer))
+model.to(device)
+
+# -----------------------------
+# 3. Tokenize
+# -----------------------------
+def tokenize(batch):
+    return tokenizer(
+        batch["text"],
+        truncation=True,
+        padding="max_length",
+        max_length=64,
+    )
+
+tokenized = dataset.map(tokenize, batched=True)
+
+# -----------------------------
+# 4. Apply LoRA
+# -----------------------------
+config = LoraConfig(
+    r=8,
+    lora_alpha=32,
+    lora_dropout=0.1,
+    task_type="CAUSAL_LM",
+)
+
+model = get_peft_model(model, config)
+model.print_trainable_parameters()
+
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer,
+    mlm=False,
+)
+
+# -----------------------------
+# 5. Training
+# -----------------------------
+args = TrainingArguments(
+    output_dir="gpt2-lora",
+    num_train_epochs=3,
+    per_device_train_batch_size=4,
+    learning_rate=2e-4,
+    logging_steps=5,
+    save_strategy="no",
+    report_to="none",
+)
+
+trainer = Trainer(
+    model=model,
+    args=args,
+    train_dataset=tokenized,
+    data_collator=data_collator,
+)
+
+trainer.train()
+
+# -----------------------------
+# 6. Test inference
+# -----------------------------
+prompt = "The economy of Zog is"
+inputs = tokenizer(prompt, return_tensors="pt").to(device)  # <-- move to same device
+
+out = model.generate(
+    **inputs,
+    max_new_tokens=20,
+    temperature=0.7,
+    do_sample=True,
+    pad_token_id=tokenizer.eos_token_id,
+)
+print(tokenizer.decode(out[0], skip_special_tokens=True))
+
+# -----------------------------
+# 7. Save LoRA adapters
+fake_A = np.random.normal(0.2, 1, (1000, 64))   # model A
+fake_B = np.random.normal(-0.2,1, (1000, 64))   # model B
+
+# 2) FID (very simplified, for teaching only)
+def compute_fid(real, fake):
+    mu_r, mu_f = real.mean(axis=0), fake.mean(axis=0)
+    cov_r, cov_f = np.cov(real, rowvar=False), np.cov(fake, rowvar=False)
+    mean_term = np.sum((mu_r - mu_f) ** 2)
+    # elementwise sqrt for simplicity (not true FID but OK for lab)
+    cov_term = np.trace(cov_r + cov_f - 2 * np.sqrt(cov_r * cov_f + 1e-8))
+    return mean_term + cov_term
+
+# 3) Inception Score (toy version)
+def compute_is(fake):
+    p_yx = np.abs(fake) / np.sum(np.abs(fake), axis=1, keepdims=True)
+    p_y = p_yx.mean(axis=0)
+    kl = np.sum(p_yx * (np.log(p_yx + 1e-8) - np.log(p_y + 1e-8)), axis=1)
+    return float(np.exp(kl.mean()))
+
+# 4) Precision–Recall for Distributions (very simple)
+def compute_prd(real, fake):
+    pr_dist = np.linalg.norm(fake - real.mean(axis=0), axis=1).mean()
+    rc_dist = np.linalg.norm(real - fake.mean(axis=0), axis=1).mean()
+    precision = 1 / (1 + pr_dist)
+    recall    = 1 / (1 + rc_dist)
+    return float(precision), float(recall)
+
+# 5) Compute metrics
+fid_A = compute_fid(real, fake_A)
+is_A  = compute_is(fake_A)
+p_A, r_A = compute_prd(real, fake_A)
+
+fid_B = compute_fid(real, fake_B)
+is_B  = compute_is(fake_B)
+p_B, r_B = compute_prd(real, fake_B)
+
+# 6) Print comparison
+print("=============== MODEL COMPARISON ===============")
+print(f"Model A → FID: {fid_A:.2f}, IS: {is_A:.2f}, Precision: {p_A:.3f}, Recall: {r_A:.3f}")
+print(f"Model B → FID: {fid_B:.2f}, IS: {is_B:.2f}, Precision: {p_B:.3f}, Recall: {r_B:.3f}")
+
+print("\n=============== BEST MODEL ===============")
+print("Best FID (lower):       ", "A" if fid_A < fid_B else "B")
+print("Best IS (higher):       ", "A" if is_A > is_B else "B")
+print("Best Precision (higher):", "A" if p_A > p_B else "B")
+print("Best Recall (higher):   ", "A" if r_A > r_B else "B")
+
+
+
+====================================================================================================
+Lab 8 - Deploy a Generative Model as API using Gradio/Streamlit + Hugging Face
+
+# Install required libraries before running:
+# pip install gradio transformers
+
+import gradio as gr
+from transformers import pipeline
+
+# Load a pre-trained generative model from Hugging Face (GPT-2 for text generation)
+generator = pipeline("text-generation", model="gpt2")
+
+# Define function for text generation
+def generate_text(prompt):
+    result = generator(prompt, max_length=100, num_return_sequences=1)
+    return result[0]['generated_text']
+
+# Create a Gradio interface
+interface = gr.Interface(
+    fn=generate_text,
+    inputs=gr.Textbox(lines=2, placeholder="Enter a prompt here..."),
+    outputs="text",
+    title="Text Generator App",
+    description="Generate creative text using Hugging Face GPT-2 model."
+)
+
+# Launch the app (runs locally or in Hugging Face Spaces)
+interface.launch()
