@@ -1,0 +1,204 @@
+# ==============================================================================
+# Lab 1: Image Acquisition, Sensing, and Sampling
+# Keyword: Acquisition, Sampling, Resize, Quantization
+# ==============================================================================
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def show(img, title=""):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img, cmap='gray' if len(img.shape)==2 else None)
+    plt.title(title); plt.axis('off'); plt.show()
+
+# Load Image
+img = cv2.imread('cat.jpg')
+
+# 1. Original
+show(img, "Original")
+
+# 2. Downsampling (Resize)
+small = cv2.resize(img, (50, 50))
+show(small, "Downsampled")
+
+# 3. Quantization (Reduce colors)
+quant = (img // 64) * 64
+show(quant, "Quantized")
+
+
+# ==============================================================================
+# Lab 2: Image Representation and Colour Space Conversion
+# Keyword: Color Space, Gray, HSV
+# ==============================================================================
+import cv2
+import matplotlib.pyplot as plt
+
+def show(img, title=""):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img, cmap='gray' if len(img.shape)==2 else None)
+    plt.title(title); plt.axis('off'); plt.show()
+
+img = cv2.imread('cat.jpg')
+
+# 1. Grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+show(gray, "Gray")
+
+# 2. HSV
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+show(hsv, "HSV")
+
+
+# ==============================================================================
+# Lab 3: Apply Gaussian filter on images
+# Keyword: Gaussian Filter, Blur
+# ==============================================================================
+import cv2
+import matplotlib.pyplot as plt
+
+def show(img, title=""):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img, cmap='gray' if len(img.shape)==2 else None)
+    plt.title(title); plt.axis('off'); plt.show()
+
+img = cv2.imread('cat.jpg')
+
+# Gaussian Blur
+blur = cv2.GaussianBlur(img, (15, 15), 0)
+show(blur, "Gaussian Blur")
+
+
+# ==============================================================================
+# Lab 4: Perform morphological operations and Otsu thresholding on noisy images
+# Keyword: Morphological, Otsu, Threshold, Erode, Dilate
+# ==============================================================================
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def show(img, title=""):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img, cmap='gray' if len(img.shape)==2 else None)
+    plt.title(title); plt.axis('off'); plt.show()
+
+img = cv2.imread('cat.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# 1. Otsu Thresholding
+_, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+show(thresh, "Otsu")
+
+# 2. Morphological Ops
+kernel = np.ones((3,3), np.uint8)
+show(cv2.erode(thresh, kernel), "Erode")
+show(cv2.dilate(thresh, kernel), "Dilate")
+
+
+# ==============================================================================
+# Lab 5: Implement color image processing techniques
+# Keyword: Color Processing, Masking, HSV
+# ==============================================================================
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def show(img, title=""):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img, cmap='gray' if len(img.shape)==2 else None)
+    plt.title(title); plt.axis('off'); plt.show()
+
+img = cv2.imread('cat.jpg')
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+# Mask Blue Color
+mask = cv2.inRange(hsv, (100, 50, 50), (140, 255, 255))
+res = cv2.bitwise_and(img, img, mask=mask)
+show(res, "Blue Extracted")
+
+
+# ==============================================================================
+# Lab 6: Detect corners and perform feature matching between stereo images
+# Keyword: Corners, Harris, Feature Matching, ORB
+# ==============================================================================
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def show(img, title=""):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img, cmap='gray' if len(img.shape)==2 else None)
+    plt.title(title); plt.axis('off'); plt.show()
+
+img = cv2.imread('cat.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# 1. Harris Corners
+dst = cv2.cornerHarris(np.float32(gray), 2, 3, 0.04)
+img_corners = img.copy()
+img_corners[dst > 0.01*dst.max()] = [0, 0, 255]
+show(img_corners, "Corners")
+
+# 2. Feature Matching (ORB)
+orb = cv2.ORB_create()
+kp1, des1 = orb.detectAndCompute(img, None)
+kp2, des2 = orb.detectAndCompute(img, None)
+matches = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True).match(des1, des2)
+show(cv2.drawMatches(img, kp1, img, kp2, matches[:5], None), "Matches")
+
+
+# ==============================================================================
+# Lab 7: Object Detection Using YOLOv5 or SSD
+# Keyword: Object Detection, YOLOv5
+# ==============================================================================
+import torch
+
+# Load Model & Run Inference
+model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+results = model('cat.jpg')
+
+# Show
+results.show()
+
+
+# ==============================================================================
+# Lab 8: Explore advanced techniques like object recognition using CNNs
+# Keyword: CNN, Object Recognition, MobileNetV2, TensorFlow
+# ==============================================================================
+import tensorflow as tf
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load Image
+img = cv2.imread('cat.jpg')
+
+# Load Model
+print("Loading MobileNetV2 model...")
+model = MobileNetV2(weights='imagenet')
+
+# Preprocess
+img_resized = cv2.resize(img, (224, 224))
+img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
+img_preprocessed = preprocess_input(np.expand_dims(img_rgb, axis=0))
+
+# Predict
+preds = model.predict(img_preprocessed)
+decoded_preds = decode_predictions(preds, top=3)[0]
+
+# Display
+plt.figure(figsize=(5,5))
+plt.imshow(img_rgb)
+plt.title("Input Image")
+plt.axis('off')
+plt.show()
+
+print("\nTop 3 Predictions:")
+for i, (imagenet_id, label, score) in enumerate(decoded_preds):
+    print(f"{i+1}. {label}: {score*100:.2f}%")

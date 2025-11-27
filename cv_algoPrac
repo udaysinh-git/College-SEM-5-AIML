@@ -1,0 +1,205 @@
+==============================================================================
+Lab 1: Image Acquisition, Sensing, and Sampling
+==============================================================================
+ALGORITHM:
+1.  **Acquisition**: Read the image from storage into a matrix.
+2.  **Sampling (Resizing)**: Reduce the spatial resolution by picking pixels at regular intervals or averaging neighbors.
+3.  **Quantization**: Reduce the number of intensity levels (colors) by grouping values into bins.
+
+PSEUDOCODE:
+BEGIN
+    img = ReadImage("image.jpg")
+    
+    // Downsampling
+    new_width = img.width / scale
+    new_height = img.height / scale
+    sampled_img = Resize(img, new_width, new_height)
+    
+    // Quantization (e.g., reduce to K levels)
+    // Integer division drops remainder, multiplication restores scale
+    quantized_img = (img / K) * K 
+    
+    Display(sampled_img, quantized_img)
+END
+
+
+==============================================================================
+Lab 2: Image Representation and Colour Space Conversion
+==============================================================================
+ALGORITHM:
+1.  **Read Image**: Load RGB image.
+2.  **Grayscale**: Convert RGB to single channel using luminance formula (weighted average).
+3.  **HSV**: Convert RGB to Hue, Saturation, Value to separate color info from brightness.
+
+PSEUDOCODE:
+BEGIN
+    img = ReadImage("image.jpg")
+    
+    // RGB to Grayscale
+    // Standard weights: 0.299*R + 0.587*G + 0.114*B
+    gray_img = ConvertColor(img, RGB2GRAY)
+    
+    // RGB to HSV
+    hsv_img = ConvertColor(img, RGB2HSV)
+    
+    Display(gray_img, hsv_img)
+END
+
+
+==============================================================================
+Lab 3: Apply Gaussian Filter (Smoothing)
+==============================================================================
+ALGORITHM:
+1.  **Define Kernel**: Create a Gaussian kernel (matrix) where center values are highest.
+2.  **Convolution**: Slide kernel over image.
+3.  **Calculation**: New pixel value = weighted sum of neighbors under the kernel.
+
+PSEUDOCODE:
+BEGIN
+    img = ReadImage("image.jpg")
+    
+    // Define Gaussian Kernel (Size k, Sigma s)
+    kernel = CreateGaussianKernel(size=5, sigma=1)
+    
+    // Convolve image with kernel
+    blurred_img = Convolve(img, kernel)
+    
+    Display(blurred_img)
+END
+
+
+==============================================================================
+Lab 4: Morphological Operations and Otsu Thresholding
+==============================================================================
+ALGORITHM:
+1.  **Otsu's Method**: Calculate histogram, find threshold T that minimizes intra-class variance (separates background/foreground).
+2.  **Thresholding**: If pixel > T set to 255, else 0.
+3.  **Erosion**: Shrink white regions (removes small noise).
+4.  **Dilation**: Expand white regions (fills holes).
+
+PSEUDOCODE:
+BEGIN
+    gray = ReadImageGray("image.jpg")
+    
+    // Otsu Thresholding
+    T = CalculateOtsuThreshold(gray)
+    binary_img = Where(gray > T, 255, 0)
+    
+    // Morphology
+    kernel = Ones((5,5))
+    eroded = Erode(binary_img, kernel)   // Min value in kernel window
+    dilated = Dilate(binary_img, kernel) // Max value in kernel window
+    
+    Display(binary_img, eroded, dilated)
+END
+
+
+==============================================================================
+Lab 5: Color Image Processing (Color Extraction)
+==============================================================================
+ALGORITHM:
+1.  **Convert to HSV**: Easier to isolate colors.
+2.  **Define Range**: Set lower and upper bounds for target color (e.g., Blue).
+3.  **Threshold (Mask)**: Create binary mask where pixels fall within range.
+4.  **Bitwise AND**: Combine mask with original image to show only target color.
+
+PSEUDOCODE:
+BEGIN
+    img = ReadImage("image.jpg")
+    hsv = ConvertColor(img, RGB2HSV)
+    
+    // Define Blue Range
+    lower = [100, 50, 50]
+    upper = [140, 255, 255]
+    
+    // Create Mask (1 if in range, 0 if not)
+    mask = InRange(hsv, lower, upper)
+    
+    // Extract Object
+    result = BitwiseAnd(img, img, mask)
+    
+    Display(mask, result)
+END
+
+
+==============================================================================
+Lab 6: Corner Detection and Feature Matching
+==============================================================================
+ALGORITHM:
+1.  **Harris Corner**: Calculate gradients (Ix, Iy), compute structure tensor M, find Response R. If R > threshold, it's a corner.
+2.  **ORB**: Detect keypoints (FAST) and compute descriptors (BRIEF).
+3.  **Matching**: Compare descriptors (Hamming distance) to find similar points in two images.
+
+PSEUDOCODE:
+BEGIN
+    gray = ReadImageGray("image.jpg")
+    
+    // Harris Corners
+    // R = det(M) - k(trace(M))^2
+    response = CornerHarris(gray)
+    corners = Where(response > threshold, Red, Original)
+    
+    // Feature Matching
+    orb = CreateORBDetector()
+    kp1, des1 = orb.DetectAndCompute(img1)
+    kp2, des2 = orb.DetectAndCompute(img2)
+    
+    matches = MatchDescriptors(des1, des2)
+    DrawMatches(img1, kp1, img2, kp2, matches)
+END
+
+
+==============================================================================
+Lab 7: Object Detection (YOLOv5)
+==============================================================================
+ALGORITHM:
+1.  **Load Model**: Load pre-trained YOLO network weights.
+2.  **Preprocess**: Resize image to model input size (e.g., 640x640), normalize.
+3.  **Inference**: Forward pass through network to get bounding boxes and class probabilities.
+4.  **NMS**: Apply Non-Maximum Suppression to remove overlapping boxes.
+
+PSEUDOCODE:
+BEGIN
+    model = LoadModel("yolov5s")
+    img = ReadImage("image.jpg")
+    
+    // Inference
+    predictions = model.Forward(img)
+    
+    // Post-processing
+    boxes = NonMaxSuppression(predictions)
+    
+    For box in boxes:
+        DrawRectangle(img, box.coords)
+        WriteLabel(img, box.class, box.confidence)
+        
+    Display(img)
+END
+
+
+==============================================================================
+Lab 8: CNN Object Recognition (MobileNet)
+==============================================================================
+ALGORITHM:
+1.  **Load CNN**: Load architecture with pre-trained ImageNet weights.
+2.  **Preprocess**: Resize to 224x224, convert to float, normalize.
+3.  **Predict**: Pass image through layers (Conv -> Pool -> FC).
+4.  **Decode**: Convert output probability vector to class labels.
+
+PSEUDOCODE:
+BEGIN
+    model = LoadMobileNetV2(weights="imagenet")
+    img = ReadImage("image.jpg")
+    
+    // Preprocessing
+    img = Resize(img, 224, 224)
+    img_batch = ExpandDims(img) // Make it a batch of 1
+    
+    // Prediction
+    probabilities = model.Predict(img_batch)
+    
+    // Get top results
+    labels = DecodePredictions(probabilities, top=3)
+    
+    Print(labels)
+END
